@@ -90,3 +90,48 @@ body {
 .profile-card a:hover {
   text-decoration: underline;
   }
+.profile-card {
+  background: white;
+  padding: 25px;
+  margin: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.profile-card h1 {
+  margin-bottom: 10px;
+}
+
+.profile-card p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.profile-card a {
+  display: inline-block;
+  margin-top: 10px;
+  color: #e1306c;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.profile-card a:hover {
+  text-decoration: underline;
+}
+
+.profile-card button {
+  margin-top: 20px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  cursor: pointer;
+}
+
+.profile-card button:hover {
+  background: #333;
+  }
