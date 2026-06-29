@@ -12,21 +12,24 @@ async function loadMembers() {
     allMembers = await res.json();
     render(allMembers);
   } catch (err) {
-    membersContainer.innerHTML = "<p>Data load failed</p>";
     console.log(err);
+    membersContainer.innerHTML = "<p>Data load failed</p>";
   }
 }
 
-// SAFE GET
+// SAFE GET FUNCTION
 function get(user, key) {
   return (user[key] || "").toString().trim();
 }
 
-// RENDER LIST
+// LIST RENDER
 function render(data) {
   membersContainer.innerHTML = "";
 
-  data.forEach((user, index) => {
+  data.forEach((user) => {
+
+    const encodedUser = encodeURIComponent(JSON.stringify(user));
+
     membersContainer.innerHTML += `
       <div class="card">
 
@@ -36,57 +39,22 @@ function render(data) {
         <p><b>City:</b> ${get(user, "City")}</p>
         <p><b>Genre:</b> ${get(user, "Genre")}</p>
 
-        <button onclick="openProfile(${index})">View Profile</button>
+        <button onclick="openProfile('${encodedUser}')">
+          View Profile
+        </button>
 
       </div>
     `;
   });
 }
 
-// PROFILE PAGE
-function openProfile(index) {
-  const user = allMembers[index];
-
-  membersContainer.innerHTML = `
-    <div class="profile-card">
-
-      <h1>${get(user, "Name")}</h1>
-
-      <p><b>Role:</b> ${get(user, "Role")}</p>
-      <p><b>Experience:</b> ${get(user, "Experience")}</p>
-      <p><b>City:</b> ${get(user, "City")}</p>
-      <p><b>Genre:</b> ${get(user, "Genre")}</p>
-      <p><b>Looking For:</b> ${get(user, "Looking For")}</p>
-      <p><b>About:</b> ${get(user, "About")}</p>
-
-      <p>
-        <b>Instagram:</b>
-        <a href="${get(user, "Instagram Link")}" target="_blank">
-          Open Instagram
-        </a>
-      </p>
-
-      <button onclick="render(allMembers)">⬅ Back</button>
-
-    </div>
-  `;
+// PROFILE OPEN FUNCTION
+function openProfile(userData) {
+  localStorage.setItem("selectedUser", userData);
+  window.location.href = "profile.html";
 }
 
-// ROLE FILTER
-function filterRole(role) {
-  if (role === "All") {
-    render(allMembers);
-    return;
-  }
-
-  const filtered = allMembers.filter(user =>
-    get(user, "Role").toLowerCase().includes(role.toLowerCase())
-  );
-
-  render(filtered);
-}
-
-// SEARCH
+// SEARCH FUNCTION
 searchInput.addEventListener("input", function () {
   const value = this.value.toLowerCase().trim();
 
@@ -101,5 +69,5 @@ searchInput.addEventListener("input", function () {
   render(filtered);
 });
 
-// START
+// START APP
 loadMembers();
