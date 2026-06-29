@@ -4,70 +4,86 @@ const membersContainer = document.getElementById("members");
 const searchInput = document.getElementById("search");
 
 let allMembers = [];
+let currentRole = "All";
 
-// LOAD DATA
+// Load Data
 async function loadMembers() {
   try {
     const res = await fetch(api);
     allMembers = await res.json();
     render(allMembers);
   } catch (err) {
-    console.log(err);
-    membersContainer.innerHTML = "<p>Data load failed</p>";
+    console.error(err);
+    membersContainer.innerHTML = "<h2>Failed to load members.</h2>";
   }
 }
 
-// SAFE GET FUNCTION
+// Safe Get
 function get(user, key) {
   return (user[key] || "").toString().trim();
 }
 
-// LIST RENDER
+// Render Cards
 function render(data) {
   membersContainer.innerHTML = "";
 
-  data.forEach((user) => {
+  if (data.length === 0) {
+    membersContainer.innerHTML = "<h2>No members found.</h2>";
+    return;
+  }
 
-    const encodedUser = encodeURIComponent(JSON.stringify(user));
-
+  data.forEach(user => {
     membersContainer.innerHTML += `
       <div class="card">
-
         <h2>${get(user, "Name")}</h2>
 
         <p><b>Role:</b> ${get(user, "Role")}</p>
+        <p><b>Experience:</b> ${get(user, "Experience")}</p>
         <p><b>City:</b> ${get(user, "City")}</p>
         <p><b>Genre:</b> ${get(user, "Genre")}</p>
+        <p><b>Looking For:</b> ${get(user, "Looking For")}</p>
+        <p><b>Free/Paid:</b> ${get(user, "Free/paid")}</p>
 
-        <button onclick="openProfile('${encodedUser}')">
-          View Profile
-        </button>
-
+        ${
+          get(user, "Instagram Link")
+            ? `<a href="${get(user, "Instagram Link")}" target="_blank">📷 Instagram</a>`
+            : ""
+        }
       </div>
     `;
   });
 }
 
-// PROFILE OPEN FUNCTION
-function openProfile(userData) {
-  localStorage.setItem("selectedUser", userData);
-  window.location.href = "profile.html";
-}
+// Search + Role Filter
+function applyFilters() {
+  const search = searchInput.value.toLowerCase().trim();
 
-// SEARCH FUNCTION
-searchInput.addEventListener("input", function () {
-  const value = this.value.toLowerCase().trim();
+  const filtered = allMembers.filter(user => {
 
-  const filtered = allMembers.filter(user =>
-    get(user, "Name").toLowerCase().includes(value) ||
-    get(user, "Role").toLowerCase().includes(value) ||
-    get(user, "City").toLowerCase().includes(value) ||
-    get(user, "Genre").toLowerCase().includes(value) ||
-    get(user, "Experience").toLowerCase().includes(value)
-  );
+    const matchSearch =
+      get(user, "Name").toLowerCase().includes(search) ||
+      get(user, "Role").toLowerCase().includes(search) ||
+      get(user, "City").toLowerCase().includes(search) ||
+      get(user, "Genre").toLowerCase().includes(search);
+
+    const matchRole =
+      currentRole === "All" ||
+      get(user, "Role").toLowerCase() === currentRole.toLowerCase();
+
+    return matchSearch && matchRole;
+  });
 
   render(filtered);
-});
+}
 
-// START APP
+// Search Event
+searchInput.addEventListener("input", applyFilters);
+
+// Role Filter
+function filterRole(role) {
+  currentRole = role;
+  applyFilters();
+}
+
+// Start
 loadMembers();
