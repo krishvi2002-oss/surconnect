@@ -5,38 +5,31 @@ const searchInput = document.getElementById("search");
 
 let allMembers = [];
 
-// Data Fetch
-fetch(api)
-  .then(res => res.json())
-  .then(data => {
-    allMembers = data;
-    renderMembers(allMembers);
-  })
-  .catch(err => {
-    console.log("Error:", err);
+async function loadMembers() {
+  try {
+    const response = await fetch(api);
+    allMembers = await response.json();
+    displayMembers(allMembers);
+  } catch (error) {
     membersContainer.innerHTML = "<p>Failed to load members.</p>";
-  });
+    console.error(error);
+  }
+}
 
-// Show Members
-function renderMembers(data) {
+function displayMembers(list) {
   membersContainer.innerHTML = "";
 
-  data.forEach(user => {
+  list.forEach(user => {
     membersContainer.innerHTML += `
       <div class="card">
-        <h2>${user["Full Name"]}</h2>
+        <h2>${user["Full Name"] || ""}</h2>
 
-        <p><b>Role:</b> ${user["Role"]}</p>
-
-        <p><b>City:</b> ${user["City"]}</p>
-
-        <p><b>Experience:</b> ${user["Experience "]}</p>
-
-        <p><b>Genre:</b> ${user["Genre"]}</p>
-
-        <p><b>Looking For:</b> ${user["Looking For"]}</p>
-
-        <p><b>${user["Free / Paid"]}</b></p>
+        <p><b>Role:</b> ${user["Role"] || ""}</p>
+        <p><b>City:</b> ${user["City"] || ""}</p>
+        <p><b>Experience:</b> ${user["Experience"] || user["Experience "] || ""}</p>
+        <p><b>Genre:</b> ${user["Genre"] || ""}</p>
+        <p><b>Looking For:</b> ${user["Looking For"] || ""}</p>
+        <p><b>${user["Free / Paid"] || ""}</b></p>
 
         <button>View Profile</button>
       </div>
@@ -44,9 +37,8 @@ function renderMembers(data) {
   });
 }
 
-// Search
-searchInput.addEventListener("input", function (e) {
-  const value = e.target.value.toLowerCase();
+searchInput.addEventListener("input", function () {
+  const value = this.value.toLowerCase();
 
   const filtered = allMembers.filter(user =>
     (user["Full Name"] || "").toLowerCase().includes(value) ||
@@ -55,5 +47,7 @@ searchInput.addEventListener("input", function (e) {
     (user["Genre"] || "").toLowerCase().includes(value)
   );
 
-  renderMembers(filtered);
+  displayMembers(filtered);
 });
+
+loadMembers();
