@@ -5,31 +5,45 @@ const searchInput = document.getElementById("search");
 
 let allMembers = [];
 
+// Fetch data
 async function loadMembers() {
   try {
-    const response = await fetch(api);
-    allMembers = await response.json();
-    displayMembers(allMembers);
-  } catch (error) {
-    membersContainer.innerHTML = "<p>Failed to load members.</p>";
-    console.error(error);
+    const res = await fetch(api);
+    const data = await res.json();
+
+    allMembers = data || [];
+    render(allMembers);
+
+  } catch (err) {
+    console.log(err);
+    membersContainer.innerHTML = "<p>Data load failed</p>";
   }
 }
 
-function displayMembers(list) {
+// Safe getter (MOST IMPORTANT)
+function get(user, key) {
+  return (user[key] || "").toString().trim();
+}
+
+// Render UI
+function render(data) {
   membersContainer.innerHTML = "";
 
-  list.forEach(user => {
+  data.forEach(user => {
     membersContainer.innerHTML += `
       <div class="card">
-        <h2>${user["Full Name"] || ""}</h2>
+        <h2>${get(user, "Name")}</h2>
 
-        <p><b>Role:</b> ${user["Role"] || ""}</p>
-        <p><b>City:</b> ${user["City"] || ""}</p>
-        <p><b>Experience:</b> ${user["Experience"] || user["Experience "] || ""}</p>
-        <p><b>Genre:</b> ${user["Genre"] || ""}</p>
-        <p><b>Looking For:</b> ${user["Looking For"] || ""}</p>
-        <p><b>${user["Free / Paid"] || ""}</b></p>
+        <p><b>Role:</b> ${get(user, "Role")}</p>
+        <p><b>Experience:</b> ${get(user, "Experience")}</p>
+        <p><b>City:</b> ${get(user, "City")}</p>
+        <p><b>Genre:</b> ${get(user, "Genre")}</p>
+        <p><b>Looking For:</b> ${get(user, "Looking For")}</p>
+        <p><b>Type:</b> ${get(user, "Free/paid")}</p>
+
+        <p><b>Instagram:</b> ${get(user, "Instagram Link")}</p>
+
+        <p>${get(user, "About")}</p>
 
         <button>View Profile</button>
       </div>
@@ -37,17 +51,22 @@ function displayMembers(list) {
   });
 }
 
+// Search
 searchInput.addEventListener("input", function () {
-  const value = this.value.toLowerCase();
+  const value = this.value.toLowerCase().trim();
 
-  const filtered = allMembers.filter(user =>
-    (user["Full Name"] || "").toLowerCase().includes(value) ||
-    (user["Role"] || "").toLowerCase().includes(value) ||
-    (user["City"] || "").toLowerCase().includes(value) ||
-    (user["Genre"] || "").toLowerCase().includes(value)
-  );
+  const filtered = allMembers.filter(user => {
+    return (
+      get(user, "Name").toLowerCase().includes(value) ||
+      get(user, "Role").toLowerCase().includes(value) ||
+      get(user, "City").toLowerCase().includes(value) ||
+      get(user, "Genre").toLowerCase().includes(value) ||
+      get(user, "Experience").toLowerCase().includes(value)
+    );
+  });
 
-  displayMembers(filtered);
+  render(filtered);
 });
 
+// Start app
 loadMembers();
