@@ -13,6 +13,10 @@ async function loadMembers() {
   try {
     const res = await fetch(api);
     allMembers = await res.json();
+    
+    // Data aate hi sabse pehle dropdown mein dynamic cities bharenge
+    populateCityDropdown(allMembers);
+    
     render(allMembers);
   } catch (err) {
     console.error(err);
@@ -25,11 +29,29 @@ function get(user, key) {
   return (user[key] || "").toString().trim();
 }
 
-// Function to generate class names safely based on Google Form options
+// Roles se spaces aur special characters hata kar CSS-friendly name banane ke liye
 function getClassFriendlyRole(role) {
   return role.toLowerCase()
-             .replace(/[^a-z0-9]/g, '-') // Special characters jaise '/' ko '-' bana dega
-             .replace(/-+/g, '-');       // Double spaces/hyphens ko single karega
+             .replace(/[^a-z0-9]/g, '-')
+             .replace(/-+/g, '-');
+}
+
+// Dropdown ko dynamic banane ka function
+function populateCityDropdown(data) {
+  // Saari unique aur proper-cased cities nikalna
+  const cities = data.map(user => get(user, "City").trim())
+                     .filter(city => city !== "") // Khali fields hatao
+                     .map(city => city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()); // Sabhi ka format ek jaisa (e.g., Delhi, Mumbai)
+  
+  const uniqueCities = [...new Set(cities)].sort(); // Duplicates delete karke alphabetical sort karein
+
+  // Dropdown clear karke base option set karna
+  citySelect.innerHTML = '<option value="All">🔍 All Cities</option>';
+
+  // Loop chala kar har city ko dropdown mein add karna
+  uniqueCities.forEach(city => {
+    citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+  });
 }
 
 // Render Cards
@@ -43,7 +65,7 @@ function render(data) {
 
   data.forEach(user => {
     const rawRole = get(user, "Role");
-    const roleClass = getClassFriendlyRole(rawRole); // For styling card & badge
+    const roleClass = getClassFriendlyRole(rawRole);
 
     membersContainer.innerHTML += `
       <div class="card card-${roleClass}">
@@ -74,19 +96,19 @@ function applyFilters() {
   const search = searchInput.value.toLowerCase().trim();
 
   const filtered = allMembers.filter(user => {
-    // 1. Search Bar Match
+    // 1. Search Bar Filter
     const matchSearch =
       get(user, "Name").toLowerCase().includes(search) ||
       get(user, "Role").toLowerCase().includes(search) ||
       get(user, "City").toLowerCase().includes(search) ||
       get(user, "Genre").toLowerCase().includes(search);
 
-    // 2. Role Button Match
+    // 2. Role Buttons Filter
     const matchRole =
       currentRole === "All" ||
       get(user, "Role").toLowerCase() === currentRole.toLowerCase();
 
-    // 3. City Dropdown Match
+    // 3. City Dropdown Filter
     const matchCity =
       currentCity === "All" ||
       get(user, "City").toLowerCase() === currentCity.toLowerCase();
@@ -97,20 +119,18 @@ function applyFilters() {
   render(filtered);
 }
 
-// Search Event
+// Input and Select Listeners
 searchInput.addEventListener("input", applyFilters);
 
-// Role Filter Button Trigger
 function filterRole(role) {
   currentRole = role;
   applyFilters();
 }
 
-// City Filter Dropdown Trigger
 function filterCity() {
   currentCity = citySelect.value;
   applyFilters();
 }
 
-// Start
+// Run Everything
 loadMembers();
