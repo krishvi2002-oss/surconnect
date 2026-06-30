@@ -1,12 +1,4 @@
-const SUPABASE_URL = "https://mrzbadbnluqttkkwrllz.supabase.co";
-
-const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yemJhZGJubHVxdHRra3dybGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MjgyMTcsImV4cCI6MjA5ODQwNDIxN30.ZQgYt9G73aERGI4v1cpZ5a_Lk3RLSmqtCoOitdc_J9A";
-
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+const api = "https://sheetdb.io/api/v1/ixxby18l8vjrm";
 
 const membersContainer = document.getElementById("members");
 const searchInput = document.getElementById("search");
@@ -14,31 +6,25 @@ const searchInput = document.getElementById("search");
 let allMembers = [];
 let currentRole = "All";
 
+// Load Data
+async function loadMembers() {
+  try {
+    const res = await fetch(api);
+    allMembers = await res.json();
+    render(allMembers);
+  } catch (err) {
+    console.error(err);
+    membersContainer.innerHTML = "<h2>Failed to load members.</h2>";
+  }
+}
+
+// Safe Get
 function get(user, key) {
   return (user[key] || "").toString().trim();
 }
 
-async function loadMembers() {
-
-  membersContainer.innerHTML = "<h2>Loading...</h2>";
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    membersContainer.innerHTML = "<h2>Failed to load members.</h2>";
-    return;
-  }
-
-  allMembers = data;
-  render(allMembers);
-}
-
+// Render Cards
 function render(data) {
-
   membersContainer.innerHTML = "";
 
   if (data.length === 0) {
@@ -47,66 +33,58 @@ function render(data) {
   }
 
   data.forEach(user => {
-
     membersContainer.innerHTML += `
       <div class="card">
+        <h2>${get(user, "Name")}</h2>
 
-      <h2>${get(user,"name")}</h2>
+       <p><b>Role:</b> ${get(user, "Role")}</p>
+<p><b>Experience:</b> ${get(user, "Experience")}</p>
+<p><b>City:</b> ${get(user, "City")}</p>
+<p><b>Genre:</b> ${get(user, "Genre")}</p>
+<p><b>Looking For:</b> ${get(user, "Looking For")}</p>
+<p><b>Free/Paid:</b> ${get(user, "Free/Paid")}</p>
+<p><b>About:</b> ${get(user, "About")}</p>
 
-      <p><b>Role:</b> ${get(user,"role")}</p>
-      <p><b>Experience:</b> ${get(user,"experience")}</p>
-      <p><b>City:</b> ${get(user,"city")}</p>
-      <p><b>Genre:</b> ${get(user,"genre")}</p>
-      <p><b>Looking For:</b> ${get(user,"looking_for")}</p>
-      <p><b>Free/Paid:</b> ${get(user,"pricing")}</p>
-      <p><b>About:</b> ${get(user,"about")}</p>
-
-      ${
-        get(user,"instagram")
-        ? `<a href="${get(user,"instagram")}" target="_blank">📷 Instagram</a>`
-        : ""
-      }
-
+        ${
+          get(user, "Instagram Link")
+            ? `<a href="${get(user, "Instagram Link")}" target="_blank">📷 Instagram</a>`
+            : ""
+        }
       </div>
     `;
-
   });
-
 }
 
+// Search + Role Filter
 function applyFilters() {
+  const search = searchInput.value.toLowerCase().trim();
 
-  const search = searchInput.value.toLowerCase();
-
-  const filtered = allMembers.filter(user=>{
+  const filtered = allMembers.filter(user => {
 
     const matchSearch =
-
-      get(user,"name").toLowerCase().includes(search) ||
-      get(user,"role").toLowerCase().includes(search) ||
-      get(user,"city").toLowerCase().includes(search) ||
-      get(user,"genre").toLowerCase().includes(search);
+      get(user, "Name").toLowerCase().includes(search) ||
+      get(user, "Role").toLowerCase().includes(search) ||
+      get(user, "City").toLowerCase().includes(search) ||
+      get(user, "Genre").toLowerCase().includes(search);
 
     const matchRole =
-
-      currentRole==="All" ||
-      get(user,"role").toLowerCase()===currentRole.toLowerCase();
+      currentRole === "All" ||
+      get(user, "Role").toLowerCase() === currentRole.toLowerCase();
 
     return matchSearch && matchRole;
-
   });
 
   render(filtered);
-
 }
 
-searchInput.addEventListener("input",applyFilters);
+// Search Event
+searchInput.addEventListener("input", applyFilters);
 
-function filterRole(role){
-
-  currentRole=role;
+// Role Filter
+function filterRole(role) {
+  currentRole = role;
   applyFilters();
-
 }
 
+// Start
 loadMembers();
